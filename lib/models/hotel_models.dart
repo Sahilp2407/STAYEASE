@@ -1,0 +1,174 @@
+import 'package:flutter/material.dart';
+
+enum BookingStatus {
+  upcoming,
+  completed,
+  cancelled,
+}
+
+class Room {
+  final String id;
+  final String name;
+  final int capacity;
+  final String bedType;
+  final int pricePerNight;
+  final List<String> amenities;
+  final String cancellationPolicy;
+  final bool breakfastIncluded;
+  final String imageUrl;
+
+  const Room({
+    required this.id,
+    required this.name,
+    required this.capacity,
+    required this.bedType,
+    required this.pricePerNight,
+    required this.amenities,
+    required this.cancellationPolicy,
+    required this.breakfastIncluded,
+    required this.imageUrl,
+  });
+}
+
+class GuestReview {
+  final String author;
+  final String avatarUrl;
+  final double rating;
+  final String date;
+  final String comment;
+
+  const GuestReview({
+    required this.author,
+    required this.avatarUrl,
+    required this.rating,
+    required this.date,
+    required this.comment,
+  });
+}
+
+class Hotel {
+  final String id;
+  final String name;
+  final String category; // e.g. "★★★★★ Luxury Hotel"
+  final double rating;
+  final int reviewsCount;
+  final String city;
+  final String location;
+  final String distanceDescription; // e.g. "0.8 km from Gateway of India"
+  final int pricePerNight;
+  final int priceInclTaxes;
+  final List<String> amenities; // e.g. ["Wi-Fi", "Pool", "Breakfast", "Parking"]
+  final String defaultRoomType; // e.g. "Deluxe King Room"
+  final String cancellationPolicy; // e.g. "Free cancellation"
+  final String breakfastInfo; // e.g. "Breakfast included"
+  final List<String> images;
+  final String badge; // "Top Rated", "Best Value", "Popular", or empty
+  final String description;
+  final double latitude;
+  final double longitude;
+  final List<Room> rooms;
+  final List<GuestReview> reviews;
+  final Color heroColor1;
+  final Color heroColor2;
+
+  const Hotel({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.rating,
+    required this.reviewsCount,
+    required this.city,
+    required this.location,
+    required this.distanceDescription,
+    required this.pricePerNight,
+    required this.priceInclTaxes,
+    required this.amenities,
+    required this.defaultRoomType,
+    required this.cancellationPolicy,
+    required this.breakfastInfo,
+    required this.images,
+    required this.badge,
+    required this.description,
+    required this.latitude,
+    required this.longitude,
+    required this.rooms,
+    required this.reviews,
+    required this.heroColor1,
+    required this.heroColor2,
+  });
+}
+
+class Booking {
+  final String id; // e.g. "#STY928374"
+  final Hotel hotel;
+  final Room room;
+  final DateTime checkIn;
+  final DateTime checkOut;
+  final int nights;
+  final int adults;
+  final int roomsCount;
+  final String guestName;
+  final String guestEmail;
+  final String guestPhone;
+  final String specialRequests;
+  final int roomTotal;
+  final int taxes;
+  final int serviceFee;
+  final int totalAmount;
+  final BookingStatus status;
+  final String paymentMethod;
+  final DateTime bookedAt;
+
+  const Booking({
+    required this.id,
+    required this.hotel,
+    required this.room,
+    required this.checkIn,
+    required this.checkOut,
+    required this.nights,
+    required this.adults,
+    required this.roomsCount,
+    required this.guestName,
+    required this.guestEmail,
+    required this.guestPhone,
+    this.specialRequests = '',
+    required this.roomTotal,
+    required this.taxes,
+    required this.serviceFee,
+    required this.totalAmount,
+    required this.status,
+    required this.paymentMethod,
+    required this.bookedAt,
+  });
+}
+
+class HotelFilter {
+  RangeValues priceRange;
+  double minRating;
+  List<String> hotelTypes;
+  List<String> amenities;
+  List<String> policies;
+  String sortBy;
+
+  HotelFilter({
+    this.priceRange = const RangeValues(1000, 30000),
+    this.minRating = 0.0,
+    List<String>? hotelTypes,
+    List<String>? amenities,
+    List<String>? policies,
+    this.sortBy = 'Recommended',
+  })  : hotelTypes = hotelTypes ?? [],
+        amenities = amenities ?? [],
+        policies = policies ?? [];
+
+  HotelFilter clone() {
+    return HotelFilter(
+      priceRange: priceRange,
+      minRating: minRating,
+      hotelTypes: List.from(hotelTypes),
+      amenities: List.from(amenities),
+      policies: List.from(policies),
+      sortBy: sortBy,
+    );
+  }
+}
