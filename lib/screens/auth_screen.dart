@@ -21,6 +21,7 @@ const Color _kBorder = Color(0xFFE5E2D8); // Thin Neutral Linen Border
 const Color _kBorderActive = Color(0xFF788A70); // Active Sage Border
 const Color _kError = Color(0xFFB85D43); // Refined Terracotta/Brick for errors
 
+// User ko email, google, phone OTP ya signup se authenticate karne wali screen
 class AuthScreen extends StatefulWidget {
   final Hotel? targetHotel;
   final VoidCallback? onAuthenticated;
@@ -69,12 +70,9 @@ class _AuthScreenState extends State<AuthScreen>
     );
 
     _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.06),
+      begin: const Offset(0, 0.08),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(_fadeAnim);
 
     _animController.forward();
   }
@@ -91,6 +89,7 @@ class _AuthScreenState extends State<AuthScreen>
 
   Hotel get _activeHotel => widget.targetHotel ?? kSampleHotels.first;
 
+  // Email format aur password length validate karne ka function
   bool _validateInputs() {
     setState(() {
       _emailError = null;
@@ -157,6 +156,7 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 
+  // Login hone ke baad direct room selection ya previous screen par bhejne ka router
   void _navigateToNextScreen() {
     if (!mounted) return;
     if (widget.targetHotel != null) {
@@ -172,6 +172,7 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
+  // Email aur password se Firebase Auth login call karna
   Future<void> _handleLogin({String? name, String? email}) async {
     if (_isLoading) return;
     FocusScope.of(context).unfocus();
@@ -217,6 +218,7 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
+  // Google Sign-In popup open karke profile auto-sync karne ka function
   Future<void> _handleGoogleAuth() async {
     if (_isLoading) return;
     FocusScope.of(context).unfocus();
@@ -251,6 +253,7 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
+  // Mobile number par 6-digit OTP bhej kar login verify karne ka modal
   void _openPhoneAuthModal() {
     final phoneCtrl = TextEditingController(text: '+91 ');
     final otpCtrl = TextEditingController();
@@ -471,6 +474,7 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 
+  // User ke email par Firebase password reset link send karne ka function
   void _onForgotPassword() async {
     final email = _emailController.text.trim();
     if (email.isEmpty) {
@@ -487,6 +491,7 @@ class _AuthScreenState extends State<AuthScreen>
     }
   }
 
+  // Naye users ke liye registration bottom sheet modal open karne ka function
   void _onSignUpPrompt() {
     final nameCtrl = TextEditingController();
     final emailCtrl = TextEditingController(text: _emailController.text.trim());
