@@ -33,6 +33,8 @@ const kGoldDark = Color(0xFF556350);
 const kBorderGold = kBorderSage;
 
 // ─── Data Models ─────────────────────────────────────────────────────────────
+
+// Popular tourist cities aur unke hotel counts represent karne ka model
 class Destination {
   final String city;
   final String state;
@@ -49,6 +51,7 @@ class Destination {
   });
 }
 
+// Featured luxury resorts aur boutique properties ka display model
 class LuxuryProperty {
   final String name;
   final String subtitle;
@@ -177,6 +180,8 @@ final _recentlyViewed = [
 ];
 
 // ─── Dashboard Screen ─────────────────────────────────────────────────────────
+
+// User ka main dashboard: featured stays, destinations, loyalty club aur quick navigation
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 

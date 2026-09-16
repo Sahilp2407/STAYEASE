@@ -16,6 +16,7 @@ const _kBorder = Color(0xFFE5E2D8); // Linen Warm Border
 const _kCard = Color(0xFFFFFFFF); // Pure White
 const _kBg = Color(0xFFF7F5EF); // Warm Cream
 
+// Har guest ke form inputs aur details hold karne ka helper class
 class GuestInfo {
   String title; // 'Mr.', 'Ms.', 'Mrs.'
   final TextEditingController firstNameCtrl;
@@ -35,6 +36,7 @@ class GuestInfo {
     this.isExpanded = true,
   });
 
+  // Text controllers ko memory se dispose karna
   void dispose() {
     firstNameCtrl.dispose();
     lastNameCtrl.dispose();
@@ -43,6 +45,7 @@ class GuestInfo {
   }
 }
 
+// Guest information, stay dates aur fare summary capture karne wali screen
 class BookingDetailsScreen extends StatefulWidget {
   final Hotel hotel;
   final Room selectedRoom;
@@ -81,6 +84,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     _initGuests();
   }
 
+  // User logged in hone par uski details auto-fill karne ka function
   void _initGuests() {
     final state = AppState.instance;
     String primaryFirst = 'Sahil';
@@ -132,6 +136,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     super.dispose();
   }
 
+  // Room capacity check karke naya guest add karne ka function
   void _addGuest() {
     final maxCapacity = widget.selectedRoom.capacity;
     if (_guests.length >= maxCapacity + 1) {
@@ -162,6 +167,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     });
   }
 
+  // Guest list se specific companion ko remove karna
   void _removeGuest(int index) {
     if (index == 0) return; // Cannot delete primary lead guest
     setState(() {
@@ -170,6 +176,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     });
   }
 
+  // Quick special request chips (e.g. Early Check-in) toggle karna
   void _toggleQuickRequest(String req) {
     setState(() {
       if (_selectedQuickRequests.contains(req)) {
@@ -183,6 +190,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     });
   }
 
+  // Primary guest validate karke bill calculate karna aur Payment Screen open karna
   void _onContinueToPayment() {
     // Validate primary guest
     final primary = _guests.first;

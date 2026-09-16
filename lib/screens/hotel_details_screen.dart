@@ -15,6 +15,7 @@ const _kCard = Color(0xFFFFFFFF); // Pure White
 const _kCardAlt = Color(0xFFF0EDE5); // Warm Linen Cream
 const _kBg = Color(0xFFF7F5EF); // Warm Cream
 
+// Selected hotel ki full photos, amenities, location aur reviews show karne wali screen
 class HotelDetailsScreen extends StatefulWidget {
   final Hotel hotel;
 
@@ -34,6 +35,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
     super.dispose();
   }
 
+  // Booking button click par login check karke Room Selection ya Auth Screen par bhejna
   void _onContinueToBook() {
     final appState = AppState.instance;
 
@@ -771,7 +773,7 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
   }
 }
 
-// Decorative Map Canvas Painter
+// Hotel location ke liye artistic map canvas draw karne wala custom painter
 class _MapCanvasPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

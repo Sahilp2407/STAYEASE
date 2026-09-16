@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/hotel_models.dart';
 import 'my_bookings_screen.dart';
 
+// App ka luxury color theme constants
 const _kPrimary = Color(0xFF6F8068); // Sage Green
 const _kAccent = Color(0xFFC98F65); // Muted Terracotta
 const _kText = Color(0xFF252923); // Deep Charcoal
@@ -11,6 +12,7 @@ const _kBorder = Color(0xFFE5E2D8); // Linen Warm Border
 const _kCard = Color(0xFFFFFFFF); // Pure White
 const _kBg = Color(0xFFF7F5EF); // Warm Cream
 
+// Booking successfully complete hone par confirmation ticket display karne wali screen
 class BookingConfirmationScreen extends StatefulWidget {
   final Booking booking;
 
@@ -22,6 +24,7 @@ class BookingConfirmationScreen extends StatefulWidget {
 
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
     with SingleTickerProviderStateMixin {
+  // Checkmark popup animation controllers
   late AnimationController _checkAnimController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -29,6 +32,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   @override
   void initState() {
     super.initState();
+    // Screen open hote hi smooth checkmark animation play karna
     _checkAnimController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),
@@ -44,10 +48,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
   @override
   void dispose() {
+    // Animation controller ko memory se release karna
     _checkAnimController.dispose();
     super.dispose();
   }
 
+  // Date ko readable format (Jaise 12 Oct 2026) mein convert karne ka helper
   String _formatDate(DateTime dt) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -69,7 +75,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
             children: [
               const SizedBox(height: 16),
 
-              // Animated Checkmark Icon
+              // Animated green checkmark badge
               ScaleTransition(
                 scale: _scaleAnimation,
                 child: Container(
@@ -94,7 +100,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
               const SizedBox(height: 24),
 
-              // "Booking Confirmed! 🎉"
+              // Confirmation title and subtitle message
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Column(
@@ -124,7 +130,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
               const SizedBox(height: 28),
 
-              // Luxury Voucher Card
+              // Digital hotel booking ticket card
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -141,7 +147,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                 ),
                 child: Column(
                   children: [
-                    // Hotel Photo & Title Header
+                    // Hotel photo, room name aur location preview header
                     Padding(
                       padding: const EdgeInsets.all(18),
                       child: Row(
@@ -204,13 +210,13 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       ),
                     ),
 
-                    // Dashed ticket separator line
+                    // Ticket style cut-out dashed line
                     CustomPaint(
                       painter: _TicketDividerPainter(),
                       child: const SizedBox(height: 16, width: double.infinity),
                     ),
 
-                    // Voucher Details Grid
+                    // Booking metadata (ID, Dates, Guests, Paid Amount)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                       child: Column(
@@ -255,7 +261,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
               const SizedBox(height: 28),
 
-              // Action Buttons: [ View Booking ] and [ Back to Home ]
+              // My Bookings screen par navigate karne ka primary button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -270,7 +276,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                     shadowColor: _kPrimary.withValues(alpha: 0.3),
                   ),
                   onPressed: () {
-                    // Navigate to My Bookings Screen
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (_) => const MyBookingsScreen(),
@@ -290,6 +295,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
               const SizedBox(height: 12),
 
+              // Home screen par wapas le jaane wala secondary button
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -302,7 +308,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                     ),
                   ),
                   onPressed: () {
-                    // Return all the way to Home Dashboard
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   child: Text(
@@ -323,6 +328,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
     );
   }
 
+  // Ticket row item (label aur value pair) build karne ka helper method
   Widget _voucherRow(String label, String value, {bool isHighlight = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -348,7 +354,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   }
 }
 
-// Decorative Ticket Dashed Line with Notches
+// Ticket divider par dashed line paint karne wala custom painter
 class _TicketDividerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

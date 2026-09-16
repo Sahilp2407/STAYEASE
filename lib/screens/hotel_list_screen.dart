@@ -15,6 +15,7 @@ const _kCard = Color(0xFFFFFFFF); // Pure White
 const _kCardAlt = Color(0xFFF0EDE5); // Warm Linen Cream
 const _kBg = Color(0xFFF7F5EF); // Warm Cream
 
+// City wise hotel search results, filter chips aur map toggle dikhane wali main listing screen
 class HotelListScreen extends StatefulWidget {
   final String city;
   final String dateRange;
@@ -42,6 +43,7 @@ class _HotelListScreenState extends State<HotelListScreen> {
     _filter = HotelFilter();
   }
 
+  // Price, rating aur cancellation policy ke basis par hotels list filter aur sort karna
   List<Hotel> _getFilteredHotels() {
     return kSampleHotels.where((h) {
       // Filter by min rating
@@ -76,6 +78,7 @@ class _HotelListScreenState extends State<HotelListScreen> {
       });
   }
 
+  // Price slider, rating aur amenities select karne ke liye filter bottom sheet open karna
   void _openFilterBottomSheet() {
     final tempFilter = _filter.clone();
 

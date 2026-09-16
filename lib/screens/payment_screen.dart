@@ -15,6 +15,7 @@ const _kCard = Color(0xFFFFFFFF); // Pure White
 const _kCardAlt = Color(0xFFF0EDE5); // Warm Linen Cream
 const _kBg = Color(0xFFF7F5EF); // Warm Cream
 
+// UPI, Card, Net Banking aur Pay at Hotel ke options ke sath checkout screen
 class PaymentScreen extends StatefulWidget {
   final Hotel hotel;
   final Room room;
@@ -74,6 +75,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     super.dispose();
   }
 
+  // Payment process karke unique booking ID generate karna aur Firestore me save karna
   void _onPay() async {
     setState(() => _isProcessing = true);
     await Future.delayed(const Duration(milliseconds: 900));
