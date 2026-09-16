@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/hotel_models.dart';
 import '../data/hotel_data.dart';
 import '../services/app_state.dart';
+import '../services/auth_service.dart';
+import 'room_selection_screen.dart';
 
 // ─── Visual Identity: StayEase Boutique Luxury Palette ─────────────────────────
 const Color _kBg = Color(0xFFF7F5EF); // Warm Ivory / Cream
@@ -122,69 +125,524 @@ class _AuthScreenState extends State<AuthScreen>
     return isValid;
   }
 
-  Future<void> _handleLogin({String? name, String? email}) async {
-    if (_isLoading) return;
-
-    FocusScope.of(context).unfocus();
-
-    setState(() => _isLoading = true);
-
-    // Simulate luxury authentication request
-    await Future.delayed(const Duration(milliseconds: 600));
+  void _showErrorSnackBar(String message) {
     if (!mounted) return;
-
-    // Persist login state in central AppState
-    AppState.instance.login(
-      name: name ?? 'Sahil Pandey',
-      email: email ?? _emailController.text.trim(),
-      phone: '+91 98200 12345',
-    );
-
-    setState(() => _isLoading = false);
-
-    // Advance directly to booking flow for the selected hotel
-    if (widget.onAuthenticated != null) {
-      widget.onAuthenticated!();
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
-
-  void _onSocialAuth(String provider) {
-    _handleLogin(
-      name: provider == 'Google' ? 'Sahil Pandey (Google)' : 'Sahil Pandey',
-      email: provider == 'Google'
-          ? 'sahil.google@stayease.com'
-          : 'sahil@stayease.com',
-    );
-  }
-
-  void _onForgotPassword() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Password reset link sent to your registered email.',
-          style: GoogleFonts.montserrat(color: _kBg, fontSize: 13),
+          message,
+          style: GoogleFonts.montserrat(color: Colors.white, fontSize: 13),
         ),
-        backgroundColor: _kText,
+        backgroundColor: _kError,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
+        duration: const Duration(seconds: 4),
       ),
     );
   }
 
-  void _onSignUpPrompt() {
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Instant demo registration enabled. Sign in directly to continue your stay!',
-          style: GoogleFonts.montserrat(color: _kBg, fontSize: 13),
+          message,
+          style: GoogleFonts.montserrat(color: Colors.white, fontSize: 13),
         ),
         backgroundColor: _kPrimary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 4),
       ),
+    );
+  }
+
+  void _navigateToNextScreen() {
+    if (!mounted) return;
+    if (widget.targetHotel != null) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => RoomSelectionScreen(hotel: widget.targetHotel!),
+        ),
+      );
+    } else if (widget.onAuthenticated != null) {
+      widget.onAuthenticated!();
+    } else if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  Future<void> _handleLogin({String? name, String? email}) async {
+    if (_isLoading) return;
+    FocusScope.of(context).unfocus();
+
+    setState(() => _isLoading = true);
+
+    final emailInput = email ?? _emailController.text.trim();
+    final passwordInput = _passwordController.text;
+
+    try {
+      final cred = await AuthService.instance.signInWithEmailAndPassword(
+        email: emailInput,
+        password: passwordInput,
+      );
+
+      final user = cred.user;
+      AppState.instance.login(
+        name: user?.displayName ?? name ?? 'Sahil Pandey',
+        email: user?.email ?? emailInput,
+        phone: user?.phoneNumber ?? '+91 98200 12345',
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      _navigateToNextScreen();
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showErrorSnackBar(AuthService.getErrorMessage(e));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('Authentication error: ${e.toString()}');
+    }
+  }
+
+  Future<void> _onSocialAuth(String provider) async {
+    if (provider == 'Google') {
+      await _handleGoogleAuth();
+    } else if (provider == 'Phone') {
+      _openPhoneAuthModal();
+    }
+  }
+
+  Future<void> _handleGoogleAuth() async {
+    if (_isLoading) return;
+    FocusScope.of(context).unfocus();
+    setState(() => _isLoading = true);
+
+    try {
+      final cred = await AuthService.instance.signInWithGoogle();
+      if (cred == null) {
+        // User cancelled Google sign-in
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      final user = cred.user;
+      AppState.instance.login(
+        name: user?.displayName ?? 'Google Guest',
+        email: user?.email ?? '',
+        phone: user?.phoneNumber ?? '',
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      _navigateToNextScreen();
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showErrorSnackBar(AuthService.getErrorMessage(e));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      _showErrorSnackBar('Google Sign-In failed: ${e.toString()}');
+    }
+  }
+
+  void _openPhoneAuthModal() {
+    final phoneCtrl = TextEditingController(text: '+91 ');
+    final otpCtrl = TextEditingController();
+    String? verificationId;
+    bool isOtpSent = false;
+    bool isProcessing = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+              ),
+              decoration: const BoxDecoration(
+                color: _kCard,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(top: BorderSide(color: _kBorder, width: 1)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _kBorder,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    isOtpSent ? 'Verify Phone Code' : 'Phone Sign In',
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: _kText,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    isOtpSent
+                        ? 'Enter the 6-digit verification code sent to ${phoneCtrl.text}'
+                        : 'Enter your phone number with country code to receive an OTP.',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 12.5,
+                      color: _kTextMuted,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  if (!isOtpSent) ...[
+                    TextField(
+                      controller: phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      style: GoogleFonts.montserrat(fontSize: 14, color: _kText),
+                      decoration: InputDecoration(
+                        labelText: 'Phone Number',
+                        labelStyle: GoogleFonts.montserrat(color: _kTextMuted),
+                        prefixIcon: const Icon(Icons.phone_rounded, color: _kPrimary, size: 20),
+                        filled: true,
+                        fillColor: _kBg,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: _kBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: _kPrimary, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _kPrimary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: isProcessing
+                            ? null
+                            : () async {
+                                final phone = phoneCtrl.text.trim();
+                                if (phone.length < 10) {
+                                  _showErrorSnackBar('Please enter a valid phone number with country code');
+                                  return;
+                                }
+                                setModalState(() => isProcessing = true);
+                                await AuthService.instance.verifyPhoneNumber(
+                                  phoneNumber: phone,
+                                  onCodeSent: (verId, _) {
+                                    setModalState(() {
+                                      verificationId = verId;
+                                      isOtpSent = true;
+                                      isProcessing = false;
+                                    });
+                                  },
+                                  onVerificationCompleted: (cred) async {
+                                    await FirebaseAuth.instance.signInWithCredential(cred);
+                                    if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                                    if (widget.onAuthenticated != null) widget.onAuthenticated!();
+                                  },
+                                  onVerificationFailed: (err) {
+                                    setModalState(() => isProcessing = false);
+                                    _showErrorSnackBar(AuthService.getErrorMessage(err));
+                                  },
+                                  onCodeAutoRetrievalTimeout: (verId) {
+                                    verificationId = verId;
+                                  },
+                                );
+                              },
+                        child: isProcessing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : Text(
+                                'Send Verification Code',
+                                style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 13.5),
+                              ),
+                      ),
+                    ),
+                  ] else ...[
+                    TextField(
+                      controller: otpCtrl,
+                      keyboardType: TextInputType.number,
+                      maxLength: 6,
+                      style: GoogleFonts.montserrat(fontSize: 18, letterSpacing: 8, fontWeight: FontWeight.w700, color: _kText),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        counterText: '',
+                        hintText: '••••••',
+                        filled: true,
+                        fillColor: _kBg,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: _kBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: _kPrimary, width: 1.5),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _kPrimary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: isProcessing
+                            ? null
+                            : () async {
+                                final code = otpCtrl.text.trim();
+                                if (code.length < 6 || verificationId == null) {
+                                  _showErrorSnackBar('Please enter the 6-digit code');
+                                  return;
+                                }
+                                setModalState(() => isProcessing = true);
+                                try {
+                                  final cred = await AuthService.instance.signInWithOtp(
+                                    verificationId: verificationId!,
+                                    smsCode: code,
+                                  );
+                                  final user = cred.user;
+                                  AppState.instance.login(
+                                    name: user?.displayName ?? 'Phone Guest',
+                                    email: user?.email ?? '',
+                                    phone: user?.phoneNumber ?? phoneCtrl.text.trim(),
+                                  );
+                                  if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                                  _navigateToNextScreen();
+                                } on FirebaseAuthException catch (e) {
+                                  setModalState(() => isProcessing = false);
+                                  _showErrorSnackBar(AuthService.getErrorMessage(e));
+                                } catch (e) {
+                                  setModalState(() => isProcessing = false);
+                                  _showErrorSnackBar('Verification failed: $e');
+                                }
+                              },
+                        child: isProcessing
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : Text(
+                                'Verify & Continue',
+                                style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 13.5),
+                              ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _onForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showErrorSnackBar('Please enter your email address in the field above first.');
+      return;
+    }
+    try {
+      await AuthService.instance.sendPasswordResetEmail(email);
+      _showSuccessSnackBar('Password reset instructions sent to $email.');
+    } on FirebaseAuthException catch (e) {
+      _showErrorSnackBar(AuthService.getErrorMessage(e));
+    } catch (e) {
+      _showErrorSnackBar('Could not send reset email: $e');
+    }
+  }
+
+  void _onSignUpPrompt() {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController(text: _emailController.text.trim());
+    final passCtrl = TextEditingController();
+    bool isRegistering = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 24,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+              ),
+              decoration: const BoxDecoration(
+                color: _kCard,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(top: BorderSide(color: _kBorder, width: 1)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: _kBorder,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Create Your Sanctuary Account',
+                    style: GoogleFonts.cormorantGaramond(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: _kText,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Join StayEase to unlock curated privileges, reservations, and favorites.',
+                    style: GoogleFonts.montserrat(fontSize: 12.5, color: _kTextMuted),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameCtrl,
+                    style: GoogleFonts.montserrat(fontSize: 13.5, color: _kText),
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      labelStyle: GoogleFonts.montserrat(color: _kTextMuted),
+                      prefixIcon: const Icon(Icons.person_outline_rounded, color: _kPrimary, size: 20),
+                      filled: true,
+                      fillColor: _kBg,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _kBorder)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _kPrimary, width: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    style: GoogleFonts.montserrat(fontSize: 13.5, color: _kText),
+                    decoration: InputDecoration(
+                      labelText: 'Email Address',
+                      labelStyle: GoogleFonts.montserrat(color: _kTextMuted),
+                      prefixIcon: const Icon(Icons.mail_outline_rounded, color: _kPrimary, size: 20),
+                      filled: true,
+                      fillColor: _kBg,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _kBorder)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _kPrimary, width: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passCtrl,
+                    obscureText: true,
+                    style: GoogleFonts.montserrat(fontSize: 13.5, color: _kText),
+                    decoration: InputDecoration(
+                      labelText: 'Password (min. 6 characters)',
+                      labelStyle: GoogleFonts.montserrat(color: _kTextMuted),
+                      prefixIcon: const Icon(Icons.lock_outline_rounded, color: _kPrimary, size: 20),
+                      filled: true,
+                      fillColor: _kBg,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _kBorder)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: _kPrimary, width: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _kPrimary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: isRegistering
+                          ? null
+                          : () async {
+                              final name = nameCtrl.text.trim();
+                              final email = emailCtrl.text.trim();
+                              final pass = passCtrl.text;
+                              if (name.isEmpty || email.isEmpty || pass.length < 6) {
+                                _showErrorSnackBar('Please provide name, valid email, and 6+ character password');
+                                return;
+                              }
+                              setModalState(() => isRegistering = true);
+                              try {
+                                final cred = await AuthService.instance.signUpWithEmailAndPassword(
+                                  name: name,
+                                  email: email,
+                                  password: pass,
+                                );
+                                final user = cred.user;
+                                AppState.instance.login(
+                                  name: name,
+                                  email: email,
+                                  phone: user?.phoneNumber ?? '',
+                                );
+                                if (sheetContext.mounted) Navigator.of(sheetContext).pop();
+                                _showSuccessSnackBar('Welcome to StayEase, $name!');
+                                _navigateToNextScreen();
+                              } on FirebaseAuthException catch (e) {
+                                setModalState(() => isRegistering = false);
+                                _showErrorSnackBar(AuthService.getErrorMessage(e));
+                              } catch (e) {
+                                setModalState(() => isRegistering = false);
+                                _showErrorSnackBar('Registration failed: $e');
+                              }
+                            },
+                      child: isRegistering
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(
+                              'Create Account & Continue',
+                              style: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 13.5),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

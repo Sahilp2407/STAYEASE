@@ -9,6 +9,7 @@ import 'hotel_details_screen.dart';
 import 'hotel_list_screen.dart';
 import 'my_bookings_screen.dart';
 import 'auth_screen.dart';
+import 'plans/plans_hub_screen.dart';
 
 // ─── Color Palette: Sage + Cream Boutique ──────────────────────────────────
 const kBg = Color(0xFFF7F5EF); // Warm Cream
@@ -324,8 +325,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       case 1:
         return _buildExploreTab();
       case 2:
-        return _buildSavedTab();
+        return const PlansHubScreen();
       case 3:
+        return _buildSavedTab();
+      case 4:
         return _buildProfileTab();
       default:
         return _buildHomeTab();
@@ -560,7 +563,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               const SizedBox(width: 10),
               // Profile Avatar
               GestureDetector(
-                onTap: () => setState(() => _selectedNavIndex = 3),
+                onTap: () => setState(() => _selectedNavIndex = 4),
                 child: Container(
                   width: 36,
                   height: 36,
@@ -1216,6 +1219,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     final items = [
       (Icons.home_outlined, Icons.home, 'Home'),
       (Icons.explore_outlined, Icons.explore, 'Explore'),
+      (Icons.map_outlined, Icons.map, 'Plans'),
       (Icons.favorite_border, Icons.favorite, 'Saved'),
       (Icons.person_outline, Icons.person, 'Profile'),
     ];
@@ -1429,7 +1433,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
                   ),
-                  onPressed: () => setState(() => _selectedNavIndex = 0),
+                  onPressed: () => setState(() => _selectedNavIndex = 0), // Home
                   child: Text(
                     'Explore Properties',
                     style: GoogleFonts.montserrat(
@@ -1595,7 +1599,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                   Icons.favorite_outline,
                   'Wishlist',
                   '${appState.favoriteHotelIds.length} saved sanctuaries',
-                  onTap: () => setState(() => _selectedNavIndex = 2),
+                  onTap: () => setState(() => _selectedNavIndex = 3), // Saved
                 ),
                 _profileTile(
                   Icons.loyalty_outlined,

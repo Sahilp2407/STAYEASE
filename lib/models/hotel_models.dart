@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+// बुकिंग की वर्तमान स्थिति (Upcoming, Completed, Cancelled)
 enum BookingStatus {
   upcoming,
   completed,
   cancelled,
 }
 
+// ── ROOM MODEL: होटल के कमरों के प्रकार, सुविधाएं और किराया ──
 class Room {
   final String id;
   final String name;
@@ -17,6 +20,7 @@ class Room {
   final bool breakfastIncluded;
   final String imageUrl;
 
+  // Constructor: Room मॉडल इनिशियलाइज़ करने के लिए
   const Room({
     required this.id,
     required this.name,
@@ -30,6 +34,7 @@ class Room {
   });
 }
 
+// ── GUEST REVIEW: होटल पर गेस्ट द्वारा दी गई रेटिंग और रिव्यू ──
 class GuestReview {
   final String author;
   final String avatarUrl;
@@ -37,6 +42,7 @@ class GuestReview {
   final String date;
   final String comment;
 
+  // Constructor: GuestReview इनिशियलाइज़ करने के लिए
   const GuestReview({
     required this.author,
     required this.avatarUrl,
@@ -46,6 +52,7 @@ class GuestReview {
   });
 }
 
+// ── HOTEL MODEL: होटल की पूरी जानकारी (लोकेशन, रेटिंग, तस्वीरें, कमरे) ──
 class Hotel {
   final String id;
   final String name;
@@ -71,6 +78,7 @@ class Hotel {
   final Color heroColor1;
   final Color heroColor2;
 
+  // Constructor: Hotel मॉडल इनिशियलाइज़ करने के लिए
   const Hotel({
     required this.id,
     required this.name,
@@ -98,8 +106,10 @@ class Hotel {
   });
 }
 
+// ── BOOKING MODEL: यूजर की कन्फर्म्ड या कैंसिल्ड होटल बुकिंग का रिकॉर्ड ──
 class Booking {
   final String id; // e.g. "#STY928374"
+  final String userId;
   final Hotel hotel;
   final Room room;
   final DateTime checkIn;
@@ -119,8 +129,10 @@ class Booking {
   final String paymentMethod;
   final DateTime bookedAt;
 
+  // Constructor: Booking इनिशियलाइज़ करने के लिए
   const Booking({
     required this.id,
+    this.userId = '',
     required this.hotel,
     required this.room,
     required this.checkIn,
@@ -140,8 +152,43 @@ class Booking {
     required this.paymentMethod,
     required this.bookedAt,
   });
+
+  // Booking डेटा को Firestore JSON Map में कन्वर्ट करना
+  Map<String, dynamic> toFirestore() {
+    return {
+      'bookingId': id,
+      'userId': userId,
+      'hotelId': hotel.id,
+      'hotelName': hotel.name,
+      'hotelImage': hotel.images.isNotEmpty ? hotel.images.first : '',
+      'hotelLocation': hotel.location,
+      'roomId': room.id,
+      'roomName': room.name,
+      'checkIn': Timestamp.fromDate(checkIn),
+      'checkOut': Timestamp.fromDate(checkOut),
+      'nights': nights,
+      'adults': adults,
+      'roomsCount': roomsCount,
+      'guestName': guestName,
+      'guestEmail': guestEmail,
+      'guestPhone': guestPhone,
+      'specialRequests': specialRequests,
+      'roomTotal': roomTotal,
+      'taxes': taxes,
+      'serviceFee': serviceFee,
+      'totalAmount': totalAmount,
+      'status': status.name,
+      'paymentMethod': paymentMethod,
+      'paymentStatus': 'paid',
+      'currency': 'INR',
+      'bookedAt': Timestamp.fromDate(bookedAt),
+      'createdAt': Timestamp.fromDate(bookedAt),
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
 }
 
+// ── HOTEL FILTER: होटल सर्च और फ़िल्टरिंग के पैरामीटर्स ──
 class HotelFilter {
   RangeValues priceRange;
   double minRating;
@@ -150,6 +197,7 @@ class HotelFilter {
   List<String> policies;
   String sortBy;
 
+  // Constructor: होटल फ़िल्टर डिफ़ॉल्ट्स इनिशियलाइज़ करने के लिए
   HotelFilter({
     this.priceRange = const RangeValues(1000, 30000),
     this.minRating = 0.0,
@@ -161,6 +209,7 @@ class HotelFilter {
         amenities = amenities ?? [],
         policies = policies ?? [];
 
+  // फ़िल्टर स्टेट की कॉपी बनाने के लिए
   HotelFilter clone() {
     return HotelFilter(
       priceRange: priceRange,

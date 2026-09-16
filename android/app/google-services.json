@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "1020746309841",
+    "project_id": "stayease-app-e760b",
+    "storage_bucket": "stayease-app-e760b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020746309841:android:8f28086cab739e80a0a5f0",
+        "android_client_info": {
+          "package_name": "com.stayease.stayease"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1020746309841-i82a6m1b2rgrqn0euor9i61q9udm09vg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPWJYOO8FyeywQAff8Pj8OJNwrzfeDMBM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1020746309841-i82a6m1b2rgrqn0euor9i61q9udm09vg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1020746309841-1d2t4t9rv5opfck4oe9o6k1eota090dl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stayease.stayease"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020746309841:android:43b7020a9fb22330a0a5f0",
+        "android_client_info": {
+          "package_name": "stayease.com"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1020746309841-fb34gumn3arumag5jhhbjuu8459mkq9i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "stayease.com",
+            "certificate_hash": "c6ad5ca4dce8e1ffcea36c4efb9a5445a9aafc7f"
+          }
+        },
+        {
+          "client_id": "1020746309841-i82a6m1b2rgrqn0euor9i61q9udm09vg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPWJYOO8FyeywQAff8Pj8OJNwrzfeDMBM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1020746309841-i82a6m1b2rgrqn0euor9i61q9udm09vg.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1020746309841-1d2t4t9rv5opfck4oe9o6k1eota090dl.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.stayease.stayease"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

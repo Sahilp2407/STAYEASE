@@ -41,16 +41,8 @@ class _HotelDetailsScreenState extends State<HotelDetailsScreen> {
       // 🔒 Core UX Principle: Auth appears ONLY after user taps "Continue to Book"
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (ctx) => AuthScreen(
+          builder: (_) => AuthScreen(
             targetHotel: widget.hotel,
-            onAuthenticated: () {
-              // Automatically proceed to Room Selection after login
-              Navigator.of(ctx).pushReplacement(
-                MaterialPageRoute(
-                  builder: (_) => RoomSelectionScreen(hotel: widget.hotel),
-                ),
-              );
-            },
           ),
         ),
       );

@@ -87,6 +87,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     final newBooking = Booking(
       id: bookingId,
+      userId: AppState.instance.currentUid,
       hotel: widget.hotel,
       room: widget.room,
       checkIn: widget.checkIn,
